@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from './lib/supabase'
+import { supabase } from '../lib/supabase'
 import NavBar from './components/NavBar'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
