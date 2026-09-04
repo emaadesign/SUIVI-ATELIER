@@ -3,19 +3,19 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import NavBar from './components/NavBar'
-importer Login depuis './pages/Login'
-importer le tableau de bord depuis './pages/Dashboard'
-importer Ateliers depuis './pages/Ateliers'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Ateliers from './pages/Ateliers'
 import AtelierDetail from './pages/AtelierDetail'
-importer les participants depuis './pages/Participantes'
+import Participantes from './pages/Participantes'
 import ParticipanteDetail from './pages/ParticipanteDetail'
-importer les actions depuis './pages/Stocks'
-importer le Calendrier depuis './pages/Calendrier'
-importer les messages depuis './pages/Messages'
-importer ImportBilletweb depuis './pages/ImportBilletweb'
-importer Export depuis './pages/Export'
-importer les paramètres depuis './pages/Paramètres'
-importer Plus depuis './pages/Plus'
+import Stocks from './pages/Stocks'
+import Calendrier from './pages/Calendrier'
+import Messages from './pages/Messages'
+import ImportBilletweb from './pages/ImportBilletweb'
+import Export from './pages/Export'
+import Parametres from './pages/Parametres'
+import Plus from './pages/Plus'
 import NouveauMotDePasse from './pages/NouveauMotDePasse'
 
 export default function App() {
@@ -23,23 +23,23 @@ export default function App() {
   const [chargement, setChargement] = useState(true)
   const [modeRecuperation, setModeRecuperation] = useState(false)
 
-  utiliserEffect(() => {
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      définirSession(données.session)
-      définirChargement(faux)
+      setSession(data.session)
+      setChargement(false)
     })
     const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-      définirSession(session)
-      si (événement === 'PASSWORD_RECOVERY') définirModeRecuperation(true)
+      setSession(session)
+      if (event === 'PASSWORD_RECOVERY') setModeRecuperation(true)
     })
-    retourner () => abonnement.abonnement.désabonnement()
+    return () => subscription.subscription.unsubscribe()
   }, [])
 
-  si (chargement) retourner <div className="min-h-screen bg-linen" />
-  if (modeRecuperation) renvoie <NouveauMotDePasse />
-  si (!session) retourner <Connexion />
+  if (chargement) return <div className="min-h-screen bg-linen" />
+  if (modeRecuperation) return <NouveauMotDePasse />
+  if (!session) return <Login />
 
-  retour (
+  return (
     <div className="min-h-screen bg-linen">
       <Routes>
         <Route path="/" element={<Dashboard />} />
@@ -52,7 +52,7 @@ export default function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/import" element={<ImportBilletweb />} />
         <Route path="/export" element={<Export />} />
-        <Route path="/paramètres" element={<Paramètres />} />
+        <Route path="/parametres" element={<Parametres />} />
         <Route path="/plus" element={<Plus />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
