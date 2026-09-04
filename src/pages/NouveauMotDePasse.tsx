@@ -1,79 +1,62 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from './lib/supabase'
+import NavBar from './components/NavBar'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Ateliers from './pages/Ateliers'
+import AtelierDetail from './pages/AtelierDetail'
+import Participantes from './pages/Participantes'
+import ParticipanteDetail from './pages/ParticipanteDetail'
+import Stocks from './pages/Stocks'
+import Calendrier from './pages/Calendrier'
+import Messages from './pages/Messages'
+import ImportBilletweb from './pages/ImportBilletweb'
+import Export from './pages/Export'
+import Parametres from './pages/Parametres'
+import Plus from './pages/Plus'
+import NouveauMotDePasse from './pages/NouveauMotDePasse'
 
-export default function NouveauMotDePasse() {
-  const [motDePasse, setMotDePasse] = useState('')
-  const [confirmation, setConfirmation] = useState('')
-  const [erreur, setErreur] = useState('')
-  const [succes, setSucces] = useState(false)
-  const [chargement, setChargement] = useState(false)
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [chargement, setChargement] = useState(true)
+  const [modeRecuperation, setModeRecuperation] = useState(false)
 
-  async function valider(e: React.FormEvent) {
-    e.preventDefault()
-    setErreur('')
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setChargement(false)
+    })
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session)
+      if (event === 'PASSWORD_RECOVERY') setModeRecuperation(true)
+    })
+    return () => subscription.subscription.unsubscribe()
+  }, [])
 
-    if (motDePasse.length < 6) {
-      setErreur('Le mot de passe doit contenir au moins 6 caractÃ¨res.')
-      return
-    }
-    if (motDePasse !== confirmation) {
-      setErreur('Les deux mots de passe ne correspondent pas.')
-      return
-    }
-
-    setChargement(true)
-    const { error } = await supabase.auth.updateUser({ password: motDePasse })
-    setChargement(false)
-
-    if (error) {
-      setErreur("Impossible de mettre Ã  jour le mot de passe. Redemande un nouveau lien depuis l'Ã©cran de connexion.")
-    } else {
-      setSucces(true)
-    }
-  }
-
-  if (succes) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center px-6 bg-linen text-center">
-        <div className="text-4xl mb-2">âœ…</div>
-        <h1 className="font-display text-2xl text-plum mb-2">Mot de passe mis Ã  jour</h1>
-        <p className="text-plum/60 mb-6">Tu peux maintenant te connecter avec ton nouveau mot de passe.</p>
-        <button className="btn-primary" onClick={() => (window.location.href = '/')}>
-          Aller Ã  la connexion
-        </button>
-      </div>
-    )
-  }
+  if (chargement) return <div className="min-h-screen bg-linen" />
+  if (modeRecuperation) return <NouveauMotDePasse />
+  if (!session) return <Login />
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 bg-linen">
-      <div className="text-center mb-8">
-        <div className="text-4xl mb-2">ðŸ”‘</div>
-        <h1 className="font-display text-2xl text-plum">Nouveau mot de passe</h1>
-        <p className="text-plum/60 mt-1">Choisis ton nouveau mot de passe</p>
-      </div>
-      <form onSubmit={valider} className="card space-y-3">
-        <input
-          className="input"
-          type="password"
-          placeholder="Nouveau mot de passe"
-          value={motDePasse}
-          onChange={(e) => setMotDePasse(e.target.value)}
-          required
-        />
-        <input
-          className="input"
-          type="password"
-          placeholder="Confirme le mot de passe"
-          value={confirmation}
-          onChange={(e) => setConfirmation(e.target.value)}
-          required
-        />
-        {erreur && <p className="text-clay text-sm">{erreur}</p>}
-        <button className="btn-primary w-full" disabled={chargement}>
-          {chargement ? 'Mise Ã  jour...' : 'Valider le nouveau mot de passe'}
-        </button>
-      </form>
+    <div className="min-h-screen bg-linen">
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/ateliers" element={<Ateliers />} />
+        <Route path="/ateliers/:id" element={<AtelierDetail />} />
+        <Route path="/participantes" element={<Participantes />} />
+        <Route path="/participantes/:id" element={<ParticipanteDetail />} />
+        <Route path="/stocks" element={<Stocks />} />
+        <Route path="/calendrier" element={<Calendrier />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/import" element={<ImportBilletweb />} />
+        <Route path="/export" element={<Export />} />
+        <Route path="/parametres" element={<Parametres />} />
+        <Route path="/plus" element={<Plus />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      <NavBar />
     </div>
   )
 }
