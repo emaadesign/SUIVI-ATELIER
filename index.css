@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card {
+  @apply bg-white rounded-soft shadow-sm border border-rose-light/60 p-4;
+}
+
+.btn-primary {
+  @apply bg-plum text-linen font-body font-semibold rounded-soft px-4 py-3 active:scale-[0.98] transition-transform;
+}
+
+.btn-secondary {
+  @apply bg-rose-light text-plum font-body font-semibold rounded-soft px-4 py-3 active:scale-[0.98] transition-transform;
+}
+
+.input {
+  @apply w-full rounded-soft border border-rose-light bg-white px-3 py-2 font-body text-plum focus:outline-none focus:ring-2 focus:ring-rose;
+}
+
+.page-title {
+  @apply font-display text-2xl text-plum mb-1;
+}
