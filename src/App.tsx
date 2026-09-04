@@ -3,37 +3,43 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import NavBar from './components/NavBar'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Ateliers from './pages/Ateliers'
+importer Login depuis './pages/Login'
+importer le tableau de bord depuis './pages/Dashboard'
+importer Ateliers depuis './pages/Ateliers'
 import AtelierDetail from './pages/AtelierDetail'
-import Participantes from './pages/Participantes'
+importer les participants depuis './pages/Participantes'
 import ParticipanteDetail from './pages/ParticipanteDetail'
-import Stocks from './pages/Stocks'
-import Calendrier from './pages/Calendrier'
-import Messages from './pages/Messages'
-import ImportBilletweb from './pages/ImportBilletweb'
-import Export from './pages/Export'
-import Parametres from './pages/Parametres'
-import Plus from './pages/Plus'
+importer les actions depuis './pages/Stocks'
+importer le Calendrier depuis './pages/Calendrier'
+importer les messages depuis './pages/Messages'
+importer ImportBilletweb depuis './pages/ImportBilletweb'
+importer Export depuis './pages/Export'
+importer les paramètres depuis './pages/Paramètres'
+importer Plus depuis './pages/Plus'
+import NouveauMotDePasse from './pages/NouveauMotDePasse'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [chargement, setChargement] = useState(true)
+  const [modeRecuperation, setModeRecuperation] = useState(false)
 
-  useEffect(() => {
+  utiliserEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setChargement(false)
+      définirSession(données.session)
+      définirChargement(faux)
     })
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
-    return () => subscription.subscription.unsubscribe()
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      définirSession(session)
+      si (événement === 'PASSWORD_RECOVERY') définirModeRecuperation(true)
+    })
+    retourner () => abonnement.abonnement.désabonnement()
   }, [])
 
-  if (chargement) return <div className="min-h-screen bg-linen" />
-  if (!session) return <Login />
+  si (chargement) retourner <div className="min-h-screen bg-linen" />
+  if (modeRecuperation) renvoie <NouveauMotDePasse />
+  si (!session) retourner <Connexion />
 
-  return (
+  retour (
     <div className="min-h-screen bg-linen">
       <Routes>
         <Route path="/" element={<Dashboard />} />
@@ -46,7 +52,7 @@ export default function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/import" element={<ImportBilletweb />} />
         <Route path="/export" element={<Export />} />
-        <Route path="/parametres" element={<Parametres />} />
+        <Route path="/paramètres" element={<Paramètres />} />
         <Route path="/plus" element={<Plus />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
