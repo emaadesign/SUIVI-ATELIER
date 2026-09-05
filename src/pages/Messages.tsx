@@ -21,7 +21,10 @@ export default function Messages() {
     setDernierResultat(null)
     const { data, error } = await supabase.functions.invoke('send-message', { body: { atelierId, typeMessage } })
     setEnvoiEnCours(null)
-    setDernierResultat(error ? "Erreur lors de l'envoi" : `${data.envoyes} message(s) envoyé(s) ✅`)
+    if (error) setDernierResultat("Erreur lors de l'envoi")
+    else if (data?.error) setDernierResultat(`Erreur : ${data.error}`)
+    else if (data?.erreurs?.length) setDernierResultat(`${data.envoyes} envoye(s), erreurs : ${data.erreurs.join(' | ')}`)
+    else setDernierResultat(`${data.envoyes} message(s) envoye(s)`)
     charger()
   }
 
@@ -44,17 +47,17 @@ export default function Messages() {
 
               <div className="space-y-2">
                 <BoutonEnvoi
-                  label={`📩 Envoyer le rappel (${rappelsFaits}/${actives.length})`}
+                  label={`Envoyer le rappel (${rappelsFaits}/${actives.length})`}
                   chargement={envoiEnCours === `${a.id}-rappel`}
                   onClick={() => envoyer(a.id, 'rappel')}
                 />
                 <BoutonEnvoi
-                  label={`💌 Message post-atelier (${postFaits}/${actives.length})`}
+                  label={`Message post-atelier (${postFaits}/${actives.length})`}
                   chargement={envoiEnCours === `${a.id}-post_atelier`}
                   onClick={() => envoyer(a.id, 'post_atelier')}
                 />
                 <BoutonEnvoi
-                  label={`📱 Inviter au groupe WhatsApp (${whatsappFaits}/${actives.length})`}
+                  label={`Inviter au groupe WhatsApp (${whatsappFaits}/${actives.length})`}
                   chargement={envoiEnCours === `${a.id}-whatsapp`}
                   onClick={() => envoyer(a.id, 'whatsapp')}
                 />
@@ -70,7 +73,7 @@ export default function Messages() {
 function BoutonEnvoi({ label, chargement, onClick }: { label: string; chargement: boolean; onClick: () => void }) {
   return (
     <button className="btn-secondary w-full text-sm" disabled={chargement} onClick={onClick}>
-      {chargement ? 'Envoi en cours…' : label}
+      {chargement ? 'Envoi en cours...' : label}
     </button>
   )
 }
