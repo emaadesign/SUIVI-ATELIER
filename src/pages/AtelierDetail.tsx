@@ -9,12 +9,16 @@ export default function AtelierDetail() {
   const [atelier, setAtelier] = useState<any>(null)
   const [inscriptions, setInscriptions] = useState<any[]>([])
   const [materiel, setMateriel] = useState<{ nom: string; quantite: number }[]>([])
+  const [typesAteliers, setTypesAteliers] = useState<any[]>([])
 
   useEffect(() => { charger() }, [id])
 
   async function charger() {
     const { data: a } = await supabase.from('ateliers').select('*, types_ateliers(*)').eq('id', id).single()
     setAtelier(a)
+
+    const { data: types } = await supabase.from('types_ateliers').select('*').order('nom')
+    setTypesAteliers(types ?? [])
 
     const { data: insc } = await supabase
       .from('inscriptions')
@@ -30,6 +34,8 @@ export default function AtelierDetail() {
         .eq('type_atelier_id', a.type_atelier_id)
       const actives = (insc ?? []).filter((i) => i.statut !== 'Annulée').length
       setMateriel((pack ?? []).map((p: any) => ({ nom: p.produits.nom, quantite: p.quantite * actives })))
+    } else {
+      setMateriel([])
     }
   }
 
@@ -41,18 +47,47 @@ export default function AtelierDetail() {
     charger()
   }
 
-  if (!atelier) return <div className="p-6">Chargement…</div>
+  async function changerTypeAtelier(typeAtelierId: string) {
+    await supabase.from('ateliers').update({ type_atelier_id: typeAtelierId || null }).eq('id', id)
+    charger()
+  }
+
+  if (!atelier) return <div className="p-6">Chargement...</div>
 
   const actives = inscriptions.filter((i) => i.statut !== 'Annulée')
 
   return (
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <Link to="/ateliers" className="text-rose text-sm">← Tous les ateliers</Link>
-      <h1 className="page-title mt-2">{atelier.types_ateliers?.nom}</h1>
+      <h1 className="page-title mt-2">{atelier.types_ateliers?.nom || 'Atelier (type non defini)'}</h1>
       <p className="text-plum/60 mb-4">
         {new Date(atelier.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-        {atelier.heure_debut ? ` · ${atelier.heure_debut.slice(0, 5)} – ${atelier.heure_fin?.slice(0, 5) ?? ''}` : ''}
+        {atelier.heure_debut ? ` · ${atelier.heure_debut.slice(0, 5)} - ${atelier.heure_fin?.slice(0, 5) ?? ''}` : ''}
       </p>
+
+      <div className="card mb-4">
+        <p className="font-semibold text-plum mb-2 text-sm">Type d'atelier</p>
+        <select
+          className="input"
+          value={atelier.type_atelier_id ?? ''}
+          onChange={(e) => changerTypeAtelier(e.target.value)}
+        >
+          <option value="">Choisir un type d'atelier...</option>
+          {typesAteliers.map((t) => (
+            <option key={t.id} value={t.id}>{t.nom}</option>
+          ))}
+        </select>
+        {!atelier.type_atelier_id && (
+          <p className="text-xs text-clay mt-2">
+            Tant qu'aucun type n'est choisi, le materiel a preparer ne peut pas etre calcule automatiquement.
+          </p>
+        )}
+        {typesAteliers.length === 0 && (
+          <p className="text-xs text-plum/50 mt-2">
+            Aucun type d'atelier n'existe encore. Cree-en un dans Parametres, puis reviens ici pour l'affecter.
+          </p>
+        )}
+      </div>
 
       <div className="card mb-4">
         <p className="font-semibold text-plum mb-2">{actives.length} / {atelier.capacite_max} participantes</p>
@@ -74,10 +109,10 @@ export default function AtelierDetail() {
                 </select>
               </div>
               <div className="flex gap-2 flex-wrap mt-1 text-xs">
-                {i.couleur_choisie && <Badge>🎨 {i.couleur_choisie}</Badge>}
-                {i.cookie_choisi && <Badge>🍪 {i.cookie_choisi}</Badge>}
-                <Badge tone={i.photo_autorisee ? 'ok' : 'critique'}>{i.photo_autorisee ? '📸 Autorisée' : '📸 Interdite'}</Badge>
-                <Badge tone={i.pelote_achetee ? 'ok' : 'bas'}>{i.pelote_achetee ? '✅ Pelote achetée' : '☐ Pelote à acheter'}</Badge>
+                {i.couleur_choisie && <Badge>{i.couleur_choisie}</Badge>}
+                {i.cookie_choisi && <Badge>{i.cookie_choisi}</Badge>}
+                <Badge tone={i.photo_autorisee ? 'ok' : 'critique'}>{i.photo_autorisee ? 'Photo autorisee' : 'Photo interdite'}</Badge>
+                <Badge tone={i.pelote_achetee ? 'ok' : 'bas'}>{i.pelote_achetee ? 'Pelote achetee' : 'Pelote a acheter'}</Badge>
               </div>
             </div>
           ))}
@@ -85,11 +120,11 @@ export default function AtelierDetail() {
       </div>
 
       <div className="card">
-        <p className="font-semibold text-plum mb-2">Matériel à préparer</p>
+        <p className="font-semibold text-plum mb-2">Materiel a preparer</p>
         {materiel.map((m) => (
-          <p key={m.nom} className="text-sm text-plum/80">• {m.quantite} × {m.nom}</p>
+          <p key={m.nom} className="text-sm text-plum/80">- {m.quantite} x {m.nom}</p>
         ))}
-        {materiel.length === 0 && <p className="text-sm text-plum/50">Aucun pack défini pour ce type d'atelier — configurable dans Paramètres.</p>}
+        {materiel.length === 0 && <p className="text-sm text-plum/50">Choisis d'abord un type d'atelier ci-dessus, ou definis son contenu dans Parametres.</p>}
       </div>
     </div>
   )
