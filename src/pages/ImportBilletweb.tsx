@@ -19,17 +19,17 @@ export default function ImportBilletweb() {
     setResultat(null)
     const { data, error } = await supabase.functions.invoke('sync-billetweb')
     setSynchroEnCours(false)
-    if (error) setResultat("Erreur de connexion Ã  Billetweb")
+    if (error) setResultat("Erreur de connexion a Billetweb")
     else if (data?.error) setResultat(`Erreur : ${data.error}`)
-    else setResultat(`${data.nouvellesInscriptions} nouvelle(s) inscription(s), ${data.doublonsIgnores} dÃ©jÃ  connue(s)`)
+    else setResultat(`${data.nouvellesInscriptions} nouvelle(s) inscription(s), ${data.doublonsIgnores} deja connue(s)`)
   }
 
   async function importerFichier() {
     if (!fichier || !atelierChoisi) return
     const atelier = ateliers.find((a) => a.id === atelierChoisi)
-    setResultat('Import en coursâ€¦')
+    setResultat('Import en cours...')
     const res = await importerCsvBilletweb(fichier, atelierChoisi, atelier.type_atelier_id)
-    setResultat(`${res.importees} importÃ©e(s), ${res.doublons} dÃ©jÃ  connue(s) sur ${res.total} lignes.`)
+    setResultat(`${res.importees} importee(s), ${res.doublons} deja connue(s) sur ${res.total} lignes.`)
   }
 
   return (
@@ -38,22 +38,22 @@ export default function ImportBilletweb() {
       <p className="text-plum/60 mb-4">Synchronisation automatique ou import manuel</p>
 
       <div className="card mb-4">
-        <p className="font-semibold text-plum mb-2">ðŸ”„ Synchronisation API</p>
-        <p className="text-sm text-plum/60 mb-3">RÃ©cupÃ¨re automatiquement les nouvelles inscriptions depuis Billetweb (aucun doublon crÃ©Ã©).</p>
+        <p className="font-semibold text-plum mb-2">Synchronisation API</p>
+        <p className="text-sm text-plum/60 mb-3">Recupere automatiquement les nouvelles inscriptions depuis Billetweb (aucun doublon cree).</p>
         <button className="btn-primary w-full" onClick={synchroniser} disabled={synchroEnCours}>
-          {synchroEnCours ? 'Synchronisationâ€¦' : 'Synchroniser maintenant'}
+          {synchroEnCours ? 'Synchronisation...' : 'Synchroniser maintenant'}
         </button>
       </div>
 
       <div className="card">
-        <p className="font-semibold text-plum mb-2">ðŸ“„ Import CSV / Excel (secours)</p>
-        <p className="text-sm text-plum/60 mb-3">Ã€ utiliser si l'API n'est pas disponible, ou pour forcer une synchronisation immÃ©diate.</p>
+        <p className="font-semibold text-plum mb-2">Import CSV / Excel (secours)</p>
+        <p className="text-sm text-plum/60 mb-3">A utiliser si l'API n'est pas disponible, ou pour forcer une synchronisation immediate.</p>
 
         <select className="input mb-2" value={atelierChoisi} onChange={(e) => setAtelierChoisi(e.target.value)}>
-          <option value="">Choisir l'atelier concernÃ©</option>
+          <option value="">Choisir l'atelier concerne</option>
           {ateliers.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.types_ateliers?.nom} â€” {new Date(a.date).toLocaleDateString('fr-FR')}
+              {a.types_ateliers?.nom} - {new Date(a.date).toLocaleDateString('fr-FR')}
             </option>
           ))}
         </select>
