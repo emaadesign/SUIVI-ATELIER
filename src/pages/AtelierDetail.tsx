@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { confirmerDistribution, annulerReservationSansDistribution, libererReservation } from '../lib/stock'
+import { confirmerDistribution, annulerReservationSansDistribution, libererReservation, reserverPack } from '../lib/stock'
 import Badge from '../components/Badge'
 
 export default function AtelierDetail() {
@@ -10,6 +10,8 @@ export default function AtelierDetail() {
   const [inscriptions, setInscriptions] = useState<any[]>([])
   const [materiel, setMateriel] = useState<{ nom: string; quantite: number }[]>([])
   const [typesAteliers, setTypesAteliers] = useState<any[]>([])
+  const [recalculEnCours, setRecalculEnCours] = useState(false)
+  const [messageRecalcul, setMessageRecalcul] = useState<string | null>(null)
 
   useEffect(() => { charger() }, [id])
 
@@ -52,6 +54,28 @@ export default function AtelierDetail() {
     charger()
   }
 
+  async function recalculerReservations() {
+    if (!atelier?.type_atelier_id) return
+    setRecalculEnCours(true)
+    setMessageRecalcul(null)
+    let nb = 0
+    for (const i of actives) {
+      const { data: dejaReserve } = await supabase
+        .from('mouvements_stock')
+        .select('id')
+        .eq('inscription_id', i.id)
+        .eq('type', 'reservation')
+        .limit(1)
+      if (!dejaReserve || dejaReserve.length === 0) {
+        await reserverPack(atelier.type_atelier_id, i.id)
+        nb++
+      }
+    }
+    setRecalculEnCours(false)
+    setMessageRecalcul(`${nb} inscription(s) mise(s) a jour dans le stock.`)
+    charger()
+  }
+
   if (!atelier) return <div className="p-6">Chargement...</div>
 
   const actives = inscriptions.filter((i) => i.statut !== 'Annulée')
@@ -86,6 +110,19 @@ export default function AtelierDetail() {
           <p className="text-xs text-plum/50 mt-2">
             Aucun type d'atelier n'existe encore. Cree-en un dans Parametres, puis reviens ici pour l'affecter.
           </p>
+        )}
+        {atelier.type_atelier_id && (
+          <div className="mt-3 border-t border-rose-light pt-3">
+            <button className="btn-secondary w-full text-sm" onClick={recalculerReservations} disabled={recalculEnCours}>
+              {recalculEnCours ? 'Mise a jour du stock...' : 'Reserver le stock pour les inscriptions existantes'}
+            </button>
+            {messageRecalcul && <p className="text-xs text-plum/60 mt-2">{messageRecalcul}</p>}
+            <p className="text-xs text-plum/40 mt-2">
+              A utiliser une fois si des inscriptions existaient deja avant que tu choisisses le type d'atelier
+              (par exemple juste apres une synchronisation Billetweb). Les nouvelles inscriptions reservent
+              automatiquement leur stock, ce bouton n'est utile qu'en rattrapage.
+            </p>
+          </div>
         )}
       </div>
 
