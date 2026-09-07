@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { montantAnimatrice, resultatAtelier } from '../lib/finance'
 
 function telechargerCsv(nomFichier: string, lignes: string[][]) {
   const contenu = lignes.map((l) => l.map((c) => `"${(c ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -53,6 +54,26 @@ export default function Export() {
     telechargerCsv(`preparation-atelier-${atelier.date}.csv`, lignes)
   }
 
+  async function exporterBilanFinancier() {
+    const { data } = await supabase.from('v_budget_ateliers').select('*, ateliers(types_ateliers(nom))').order('date', { ascending: false })
+    const lignes = [
+      ['Date', 'Atelier', 'Encaissements', 'Depenses', 'Animatrice', 'Resultat'],
+      ...(data ?? []).map((b: any) => {
+        const resultat = resultatAtelier(b)
+        const anim = montantAnimatrice(b)
+        return [
+          new Date(b.date).toLocaleDateString('fr-FR'),
+          b.ateliers?.types_ateliers?.nom ?? b.type_atelier_nom ?? '',
+          String(b.encaissements ?? 0),
+          String(b.depenses_reelles ?? 0),
+          String(anim),
+          String(resultat)
+        ]
+      })
+    ]
+    telechargerCsv('bilan-financier.csv', lignes)
+  }
+
   return (
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <h1 className="page-title">Export</h1>
@@ -72,6 +93,12 @@ export default function Export() {
           ))}
         </select>
         <button className="btn-secondary w-full" onClick={exporterPreparation} disabled={!atelierChoisi}>Exporter en CSV</button>
+      </div>
+
+      <div className="card mt-4">
+        <p className="font-semibold text-plum mb-2">Bilan financier de tous les ateliers</p>
+        <p className="text-sm text-plum/60 mb-3">Date, encaissements, depenses, animatrice et resultat pour chaque atelier.</p>
+        <button className="btn-primary w-full" onClick={exporterBilanFinancier}>Exporter en CSV</button>
       </div>
     </div>
   )
