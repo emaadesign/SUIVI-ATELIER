@@ -7,26 +7,30 @@ export default function Parametres() {
   const [packs, setPacks] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
   const [params, setParams] = useState<Record<string, string>>({})
+  const [categoriesDepenses, setCategoriesDepenses] = useState<any[]>([])
 
   const [nouveauType, setNouveauType] = useState('')
   const [nouveauProduit, setNouveauProduit] = useState('')
   const [nouveauPack, setNouveauPack] = useState({ type_atelier_id: '', produit_id: '', quantite: 1 })
+  const [nouvelleCategorie, setNouvelleCategorie] = useState({ nom: '', icone: '' })
 
   useEffect(() => { charger() }, [])
 
   async function charger() {
-    const [t, p, pk, m, par] = await Promise.all([
+    const [t, p, pk, m, par, cat] = await Promise.all([
       supabase.from('types_ateliers').select('*'),
       supabase.from('produits').select('*'),
       supabase.from('packs_ateliers').select('*, produits(nom), types_ateliers(nom)'),
       supabase.from('messages_types').select('*'),
-      supabase.from('parametres').select('*')
+      supabase.from('parametres').select('*'),
+      supabase.from('categories_depenses').select('*').order('nom')
     ])
     setTypes(t.data ?? [])
     setProduits(p.data ?? [])
     setPacks(pk.data ?? [])
     setMessages(m.data ?? [])
     setParams(Object.fromEntries((par.data ?? []).map((x: any) => [x.cle, x.valeur])))
+    setCategoriesDepenses(cat.data ?? [])
   }
 
   async function ajouterType() {
@@ -56,6 +60,18 @@ export default function Parametres() {
 
   async function sauvegarderParametre(cle: string, valeur: string) {
     await supabase.from('parametres').upsert({ cle, valeur })
+  }
+
+  async function ajouterCategorieDepense() {
+    if (!nouvelleCategorie.nom) return
+    await supabase.from('categories_depenses').insert({ nom: nouvelleCategorie.nom, icone: nouvelleCategorie.icone || null })
+    setNouvelleCategorie({ nom: '', icone: '' })
+    charger()
+  }
+
+  async function supprimerCategorieDepense(id: string) {
+    await supabase.from('categories_depenses').delete().eq('id', id)
+    charger()
   }
 
   return (
@@ -118,6 +134,21 @@ export default function Parametres() {
           </select>
           <input className="input w-20" type="number" min={1} value={nouveauPack.quantite} onChange={(e) => setNouveauPack({ ...nouveauPack, quantite: parseInt(e.target.value, 10) })} />
           <button className="btn-secondary" onClick={ajouterPack}>Ajouter au pack</button>
+        </div>
+      </section>
+
+      <section className="card">
+        <p className="font-semibold text-plum mb-2">Categories de depenses</p>
+        {categoriesDepenses.map((c) => (
+          <div key={c.id} className="flex justify-between items-center text-sm py-1">
+            <span>{c.icone} {c.nom}</span>
+            <button onClick={() => supprimerCategorieDepense(c.id)} className="text-clay text-xs">supprimer</button>
+          </div>
+        ))}
+        <div className="flex gap-2 mt-2">
+          <input className="input w-16" placeholder="Emoji" value={nouvelleCategorie.icone} onChange={(e) => setNouvelleCategorie({ ...nouvelleCategorie, icone: e.target.value })} />
+          <input className="input flex-1" placeholder="Nom de la categorie" value={nouvelleCategorie.nom} onChange={(e) => setNouvelleCategorie({ ...nouvelleCategorie, nom: e.target.value })} />
+          <button className="btn-secondary" onClick={ajouterCategorieDepense}>+</button>
         </div>
       </section>
 
