@@ -5,6 +5,10 @@ const ITEMS = [
   { to: '/calendrier', label: 'Calendrier', icon: '📅' },
   { to: '/messages', label: 'Messages & rappels', icon: '📩' },
   { to: '/import', label: 'Import Billetweb', icon: '🔄' },
+  { to: '/historique', label: 'Historique', icon: '📚' },
+  { to: '/fidelite', label: 'Fidelite', icon: '🌟' },
+  { to: '/budget', label: 'Budget', icon: '💰' },
+  { to: '/budget-dashboard', label: 'Dashboard financier', icon: '📊' },
   { to: '/export', label: 'Export', icon: '📤' },
   { to: '/parametres', label: 'Paramètres', icon: '⚙️' }
 ]
