@@ -17,6 +17,11 @@ import Export from './pages/Export'
 import Parametres from './pages/Parametres'
 import Plus from './pages/Plus'
 import NouveauMotDePasse from './pages/NouveauMotDePasse'
+import Historique from './pages/Historique'
+import HistoriqueDetail from './pages/HistoriqueDetail'
+import Fidelite from './pages/Fidelite'
+import Budget from './pages/Budget'
+import BudgetDashboard from './pages/BudgetDashboard'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -52,6 +57,11 @@ export default function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/import" element={<ImportBilletweb />} />
         <Route path="/export" element={<Export />} />
+        <Route path="/historique" element={<Historique />} />
+        <Route path="/historique/:id" element={<HistoriqueDetail />} />
+        <Route path="/fidelite" element={<Fidelite />} />
+        <Route path="/budget" element={<Budget />} />
+        <Route path="/budget-dashboard" element={<BudgetDashboard />} />
         <Route path="/parametres" element={<Parametres />} />
         <Route path="/plus" element={<Plus />} />
         <Route path="*" element={<Navigate to="/" />} />
